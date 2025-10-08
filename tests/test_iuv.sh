@@ -1,18 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Simple integration test for iuv run ...
-# Verifies: initial run executes and a subsequent file change triggers a rerun.
-
-LOG=test_output.log
-rm -f "$LOG"
-: > "$LOG"
-
-# Create a simple target script
-TARGET=watch_target.py
-cat > "$TARGET" <<'PY'
-print('HELLO')
-PY
+# Integration test for iuv run ...
+# All temporary artifacts (script, log, trigger file) live in a mktemp dir under /tmp.
 
 # Install via install.sh (ensures uv + iuv tool)
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,19 +12,23 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 )
 export PATH="$HOME/.local/bin:$PATH"
 
-# Work in isolated temp dir
+# Work entirely in isolated temp dir so repo stays clean
 WORKDIR="$(mktemp -d)"
 cd "$WORKDIR"
 
-# Recreate target script inside work dir for watch context
-cp "$REPO_ROOT/$TARGET" ./
+TARGET=watch_target.py
+LOG=test_output.log
+
+cat > "$TARGET" <<'PY'
+print('HELLO')
+PY
 
 # Start watcher (background) using installed tool
 iuv run "$TARGET" > "$LOG" 2>&1 &
 PID=$!
 
-echo "Started iuv watcher PID=$PID"
-trap 'echo "Cleaning up"; pkill -f "iuv.py run $TARGET" || true' EXIT
+echo "Started iuv watcher PID=$PID (workdir=$WORKDIR)"
+trap 'echo "Cleaning up"; pkill -f "iuv run $TARGET" || true; rm -rf "$WORKDIR" || true' EXIT
 
 # Wait for first occurrence
 TIMEOUT=20
@@ -54,11 +48,9 @@ done
 
 # Trigger a change
 sleep 1
-# Touch a new file to trigger watch
 echo '# change' > trigger_file.py
 
 echo "Waiting for rerun after change..."
-# Wait for at least 2 HELLO lines
 start=$(date +%s)
 while true; do
   count=$(grep -c HELLO "$LOG" || true)
@@ -75,6 +67,8 @@ while true; do
   sleep 0.5
 done
 
-# Success
-pkill -f "iuv.py run $TARGET" || true
+pkill -f "iuv run $TARGET" || true
+echo "--- FINAL LOG ---"
+cat "$LOG" || true
+echo "-------------------"
 echo "Test passed"
