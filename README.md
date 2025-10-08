@@ -2,6 +2,8 @@
 
 Tiny wrapper that watches the current directory and reruns a Python target with `uv run` whenever files change.
 
+[![CI](https://github.com/gueraf/iuv/actions/workflows/ci.yml/badge.svg)](https://github.com/gueraf/iuv/actions/workflows/ci.yml)
+
 ## Why
 You want: iterative hacking speed, zero config. `iuv` = `uv run <stuff>` + fast file watching.
 
