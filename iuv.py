@@ -17,9 +17,8 @@ def run_once(cmd: list[str]) -> None:
         print(f"[watch] error running command: {e}", file=sys.stderr)
 
 
-def watch_loop(cmd: list[str], debounce_ms: int) -> int:
-    root = Path.cwd()
-    print(f"[iuv] watching {root} recursively. Press Ctrl+C to stop.")
+def watch_loop(cmd: list[str], debounce_ms: int, root: Path) -> int:
+    print(f"[iuv] 👀 watching {root} recursively. Press Ctrl+C to stop.")
     print(f"[iuv] command: {' '.join(cmd)}")
     run_once(cmd)
     try:
@@ -36,6 +35,22 @@ def watch_loop(cmd: list[str], debounce_ms: int) -> int:
     return 0
 
 
+def resolve_target_path(raw: str) -> Path:
+    p = Path(raw)
+    try:
+        return (Path.cwd() / p).resolve() if not p.is_absolute() else p.resolve()
+    except Exception:
+        return p
+
+
+def find_watch_root(target_path: Path) -> Path:
+    search_dir = target_path.parent
+    for parent in [search_dir] + list(search_dir.parents):
+        if (parent / 'pyproject.toml').exists():
+            return parent
+    return search_dir
+
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog='iuv', description='Simple uv watch wrapper.')
     parser.add_argument('--debounce', '-d', type=int, default=150, help='Debounce time in ms (default 150)')
@@ -50,7 +65,14 @@ def main(argv=None):
         return 1
     # Transform: iuv run foo.py --arg -> uv run foo.py --arg
     uv_cmd = ['uv', 'run'] + [c for c in args.cmd[1:] if c != '--']
-    return watch_loop(uv_cmd, args.debounce)
+    # Determine script path if first arg looks like a path (contains '/' or endswith .py)
+    watch_root = Path.cwd()
+    if len(args.cmd) > 1:
+        target = args.cmd[1]
+        if target.endswith('.py') or '/' in target or target.startswith('.'):
+            resolved = resolve_target_path(target)
+            watch_root = find_watch_root(resolved)
+    return watch_loop(uv_cmd, args.debounce, watch_root)
 
 if __name__ == "__main__":
     raise SystemExit(main())
