@@ -4,18 +4,12 @@ Tiny wrapper that watches the current directory and reruns a Python target with 
 
 [![CI](https://github.com/gueraf/iuv/actions/workflows/ci.yml/badge.svg)](https://github.com/gueraf/iuv/actions/workflows/ci.yml)
 
-## Why
-You want: iterative hacking speed, zero config. `iuv` = `uv run <stuff>` + fast file watching.
-
 ## Install
-Preferred (no clone, ephemeral each run):
-```
-uvx --from git+https://github.com/gueraf/iuv.git iuv run your_script.py
-```
-Persistent install with uv:
+Persistent install with uv from head:
 ```
 uv tool install git+https://github.com/gueraf/iuv.git
 ```
+
 Local checkout + script (also installs uv if missing):
 ```
 git clone https://github.com/gueraf/iuv.git
@@ -38,12 +32,6 @@ iuv run script.py --flag value
 ```
 
 On each relevant file change (excluding `.git`, `.venv`, `__pycache__`) the previous run finishes (not force killed) and the command is invoked again.
-
-## CI / Test
-A GitHub Action runs an integration test (`tests/test_iuv.sh`):
-- Installs via `install.sh`
-- Runs `iuv run` in a temp dir
-- Touches a file and asserts a rerun occurs
 
 ## Behavior
 - Watches recursively from cwd
