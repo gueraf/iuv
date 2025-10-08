@@ -14,8 +14,23 @@ cat > "$TARGET" <<'PY'
 print('HELLO')
 PY
 
-# Start watcher (background)
-uv run iuv.py run "$TARGET" > "$LOG" 2>&1 &
+# Install via install.sh (ensures uv + iuv tool)
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+(
+  cd "$REPO_ROOT"
+  bash ./install.sh
+)
+export PATH="$HOME/.local/bin:$PATH"
+
+# Work in isolated temp dir
+WORKDIR="$(mktemp -d)"
+cd "$WORKDIR"
+
+# Recreate target script inside work dir for watch context
+cp "$REPO_ROOT/$TARGET" ./
+
+# Start watcher (background) using installed tool
+iuv run "$TARGET" > "$LOG" 2>&1 &
 PID=$!
 
 echo "Started iuv watcher PID=$PID"
