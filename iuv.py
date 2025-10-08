@@ -39,17 +39,18 @@ def watch_loop(cmd: list[str], debounce_ms: int) -> int:
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog='iuv', description='Simple uv watch wrapper.')
     parser.add_argument('--debounce', '-d', type=int, default=150, help='Debounce time in ms (default 150)')
-    parser.add_argument('cmd', nargs=argparse.REMAINDER, help='Command to execute (e.g. uvx run script.py)')
+    parser.add_argument('cmd', nargs=argparse.REMAINDER, help='iuv run <args...> -> executes `uv run <args...>` on changes')
     return parser.parse_args(argv)
 
 
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    if not args.cmd:
-        print('No command provided. Example: iuv uvx run app.py', file=sys.stderr)
+    if not args.cmd or args.cmd[0] != 'run':
+        print('Usage: iuv run <script_or_module> [args...]', file=sys.stderr)
         return 1
-    cmd = [c for c in args.cmd if c != '--']
-    return watch_loop(cmd, args.debounce)
+    # Transform: iuv run foo.py --arg -> uv run foo.py --arg
+    uv_cmd = ['uv', 'run'] + [c for c in args.cmd[1:] if c != '--']
+    return watch_loop(uv_cmd, args.debounce)
 
 if __name__ == "__main__":
     raise SystemExit(main())
