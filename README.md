@@ -38,6 +38,7 @@ On each relevant file change (excluding `.git`, `.venv`, `__pycache__`) the prev
 - Debounce default: 150ms (change with `--debounce 300`)
 - Prints a short line when rerunning
 - Errors just print; watcher keeps going
+- Press `Enter` to manually trigger a rerun.
 
 ## Examples
 ```
@@ -47,7 +48,7 @@ iuv run examples/demo.py --foo bar
 ```
 
 ## Exit
-Ctrl+C once.
+Press `Ctrl+C` once to pause. From there, you can press `Enter` to rerun, or `Ctrl+C` again to exit.
 
 ## License
-MIT (see repository if added later).
+[MIT](https://github.com/gueraf/iuv/blob/main/LICENSE)
