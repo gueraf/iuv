@@ -68,6 +68,51 @@ while true; do
 done
 
 pkill -f "iuv run $TARGET" || true
+
+# Test Enter-to-rerun
+( # Wrap in subshell to avoid messing with parent shell job control
+  stty -echoctl # hide ^C in output
+  FIFO_FILE="$WORKDIR/iuv_fifo"
+  mkfifo "$FIFO_FILE"
+
+  # iuv's stdin is the pipe
+  iuv run "$TARGET" < "$FIFO_FILE" > "$LOG" 2>&1 &
+  PID=$!
+  echo "Started iuv watcher for rerun test PID=$PID"
+
+  # This keeps the pipe open for writing
+  exec 3>"$FIFO_FILE"
+
+  sleep 2 # Wait for initial run
+  count1=$(grep -c HELLO "$LOG" || true)
+  echo "Count before Enter: $count1"
+
+  kill -s INT $PID
+  sleep 1
+  # Simulate pressing enter by sending a newline to the pipe
+  echo "simulating enter" >&3
+
+  echo "Waiting for rerun after Enter..."
+  start=$(date +%s)
+  while true; do
+    count2=$(grep -c HELLO "$LOG" || true)
+    if (( count2 > count1 )); then
+      echo "Rerun after Enter detected (count=$count2)"
+      break
+    fi
+    now=$(date +%s)
+    if (( now - start > TIMEOUT )); then
+      echo "FAIL: no rerun detected after Enter within $TIMEOUT s" >&2
+      echo "--- LOG --- "; cat "$LOG"; echo "-----------"
+      exit 1
+    fi
+    sleep 0.5
+  done
+  stty echoctl
+  exec 3>&- # close the pipe
+  rm "$FIFO_FILE"
+)
+
 echo "--- FINAL LOG ---"
 cat "$LOG" || true
 echo "-------------------"

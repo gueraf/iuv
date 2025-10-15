@@ -20,18 +20,25 @@ def run_once(cmd: list[str]) -> None:
 def watch_loop(cmd: list[str], debounce_ms: int, root: Path) -> int:
     print(f"[iuv] 👀 watching {root} recursively. Press Ctrl+C to stop.")
     print(f"[iuv] command: {' '.join(cmd)}")
-    run_once(cmd)
-    try:
-        for changes in watch(root, debounce=debounce_ms):  # type: ignore[arg-type]
-            # Filter ignored directories manually
-            filtered = [c for c in changes if not any(part in IGNORED_DIRS for part in Path(c[1]).parts)]
-            if not filtered:
-                continue
-            print(f"[iuv] {len(filtered)} change(s) detected -> rerun")
-            run_once(cmd)
-    except KeyboardInterrupt:
-        print("\n[iuv] stopped")
-        return 0
+    print(f"[iuv] Press Enter to rerun, or Ctrl+C to stop.")
+
+    while True:
+        run_once(cmd)
+        try:
+            for changes in watch(root, debounce=debounce_ms):  # type: ignore[arg-type]
+                # Filter ignored directories manually
+                filtered = [c for c in changes if not any(part in IGNORED_DIRS for part in Path(c[1]).parts)]
+                if not filtered:
+                    continue
+                print(f"[iuv] {len(filtered)} change(s) detected -> rerun")
+                break  # Exit inner loop to rerun
+        except KeyboardInterrupt:
+            print(f"\n[iuv] Paused watching {root}. Press Enter to rerun, or Ctrl+C to stop.")
+            try:
+                sys.stdin.readline()
+            except KeyboardInterrupt:
+                print("\n[iuv] stopped")
+                return 0
     return 0
 
 
