@@ -18,9 +18,9 @@ def run_once(cmd: list[str]) -> None:
 
 
 def watch_loop(cmd: list[str], debounce_ms: int, root: Path) -> int:
-    print(f"[iuv] 👀 watching {root} recursively. Press Ctrl+C to stop.")
+    print(f"[iuv] 👀 watching {root} recursively.")
     print(f"[iuv] command: {' '.join(cmd)}")
-    print(f"[iuv] Press Enter to rerun, or Ctrl+C to stop.")
+    print("[iuv] To rerun: change a file, or press Enter. To stop: Ctrl+C.")
 
     while True:
         run_once(cmd)
@@ -33,7 +33,7 @@ def watch_loop(cmd: list[str], debounce_ms: int, root: Path) -> int:
                 print(f"[iuv] {len(filtered)} change(s) detected -> rerun")
                 break  # Exit inner loop to rerun
         except KeyboardInterrupt:
-            print(f"\n[iuv] Paused watching {root}. Press Enter to rerun, or Ctrl+C to stop.")
+            print(f"\n[iuv] Paused. To rerun: change a file in {root}, or press Enter. To exit: Ctrl+C.")
             try:
                 sys.stdin.readline()
             except KeyboardInterrupt:
