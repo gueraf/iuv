@@ -5,6 +5,12 @@ Tiny wrapper that watches the current directory and reruns a Python target with 
 [![CI](https://github.com/gueraf/iuv/actions/workflows/ci.yml/badge.svg)](https://github.com/gueraf/iuv/actions/workflows/ci.yml)
 
 ## Install
+
+From PyPI via pipx: [https://pypi.org/project/iuv/](https://pypi.org/project/iuv/)
+```bash
+pipx install iuv
+```
+
 Persistent install with uv from head:
 ```
 uv tool install git+https://github.com/gueraf/iuv.git

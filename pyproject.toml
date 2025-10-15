@@ -11,6 +11,7 @@ authors = [
   { name="Fabian Guera", email="fabian.guera@gmail.com" },
 ]
 description = "Reruns uv foo/bar.py if files in foo/../... change."
+readme = "README.md"
 requires-python = ">=3.8"
 
 dependencies = [
