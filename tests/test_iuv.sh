@@ -71,7 +71,7 @@ pkill -f "iuv run $TARGET" || true
 
 # Test Enter-to-rerun
 ( # Wrap in subshell to avoid messing with parent shell job control
-  stty -echoctl # hide ^C in output
+  if [ -t 1 ]; then stty -echoctl; fi # hide ^C in output
   FIFO_FILE="$WORKDIR/iuv_fifo"
   mkfifo "$FIFO_FILE"
 
@@ -108,7 +108,7 @@ pkill -f "iuv run $TARGET" || true
     fi
     sleep 0.5
   done
-  stty echoctl
+  if [ -t 1 ]; then stty echoctl; fi
   exec 3>&- # close the pipe
   rm "$FIFO_FILE"
 )
